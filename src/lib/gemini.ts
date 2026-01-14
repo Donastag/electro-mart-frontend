@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+// import { supabase, isSupabaseConfigured } from "@/lib/supabase";
 
 // Queue system to prevent rate limiting
 const requestQueue: Array<() => Promise<void>> = [];
@@ -111,101 +111,16 @@ export async function createProductEmbedding(
   embedding: number[],
   contentType: string = 'combined'
 ): Promise<boolean> {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, skipping embedding creation');
-    return false;
-  }
-
-  try {
-    const vectorString = `[${embedding.join(',')}]`;
-
-    const { error } = await supabase
-      .from('product_embeddings')
-      .upsert({
-        product_id: productId,
-        embedding: vectorString,
-        content_type: contentType,
-      });
-
-    if (error) {
-      console.error('Embedding creation error:', error);
-      return false;
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Embedding upsert failed:', error);
-    return false;
-  }
+  // Supabase not configured, skipping embedding creation
+  console.warn('Supabase not configured, skipping embedding creation');
+  return false;
 }
 
 // Process and embed all products (for initial setup)
 export async function processAllProductsForEmbeddings(): Promise<{ success: number; failed: number }> {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, skipping product embedding processing');
-    return { success: 0, failed: 0 };
-  }
-
-  try {
-    const { data: products, error } = await supabase
-      .from('products')
-      .select(`
-        id,
-        name,
-        description,
-        categories (
-          name
-        ),
-        tags
-      `)
-      .eq('is_active', true);
-
-    if (error || !products) {
-      console.error('Failed to fetch products:', error);
-      return { success: 0, failed: 0 };
-    }
-
-    let success = 0;
-    let failed = 0;
-
-    for (const product of products) {
-      try {
-        const text = generateProductEmbeddingText({
-          name: product.name,
-          description: product.description || '',
-          category: product.categories?.name,
-          tags: product.tags,
-        });
-
-        if (text) {
-          const embedding = await generateEmbedding(text);
-          if (embedding) {
-            const created = await createProductEmbedding(product.id, embedding);
-            if (created) {
-              success++;
-            } else {
-              failed++;
-            }
-          } else {
-            failed++;
-          }
-        } else {
-          failed++;
-        }
-
-        // Rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      } catch (err) {
-        console.error(`Failed to process product ${product.id}:`, err);
-        failed++;
-      }
-    }
-
-    return { success, failed };
-  } catch (error) {
-    console.error('Batch embedding processing failed:', error);
-    return { success: 0, failed: 1 };
-  }
+  // Supabase not configured, skipping product embedding processing
+  console.warn('Supabase not configured, skipping product embedding processing');
+  return { success: 0, failed: 0 };
 }
 
 // Semantic search interface
@@ -220,36 +135,9 @@ export interface SemanticSearchResult {
 
 // Semantic product search
 export async function semanticSearch(query: string, limit: number = 20): Promise<SemanticSearchResult[]> {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, skipping semantic search');
-    return [];
-  }
-
-  try {
-    // Generate embedding for the query
-    const embedding = await generateEmbedding(query);
-    if (!embedding) return [];
-
-    // Convert to PostgreSQL vector format
-    const vectorString = `[${embedding.join(',')}]`;
-
-    // Call the database function
-    const { data, error } = await supabase.rpc('search_products_semantic', {
-      query_embedding: vectorString,
-      match_threshold: 0.1,
-      max_results: limit,
-    });
-
-    if (error) {
-      console.error('Semantic search error:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error('Semantic search failed:', error);
-    return [];
-  }
+  // Supabase not configured, skipping semantic search
+  console.warn('Supabase not configured, skipping semantic search');
+  return [];
 }
 
 // Recommendation interface
@@ -264,28 +152,9 @@ export interface ProductRecommendation {
 
 // Get product recommendations
 export async function getProductRecommendations(productId: string, limit: number = 10): Promise<ProductRecommendation[]> {
-  if (!isSupabaseConfigured()) {
-    console.warn('Supabase not configured, skipping product recommendations');
-    return [];
-  }
-
-  try {
-    const { data, error } = await supabase.rpc('get_product_recommendations', {
-      base_product_id: productId,
-      max_results: limit,
-      similarity_threshold: 0.5,
-    });
-
-    if (error) {
-      console.error('Recommendation error:', error);
-      return [];
-    }
-
-    return data || [];
-  } catch (error) {
-    console.error('Recommendations failed:', error);
-    return [];
-  }
+  // Supabase not configured, skipping product recommendations
+  console.warn('Supabase not configured, skipping product recommendations');
+  return [];
 }
 
 // Chatbot conversation interface

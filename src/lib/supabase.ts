@@ -8,9 +8,12 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const dummyUrl = 'https://dummy.supabase.co'
 const dummyKey = 'dummy-key'
 
+const effectiveUrl = supabaseUrl && supabaseUrl.startsWith('https://') && supabaseUrl !== 'your-supabase-url' ? supabaseUrl : dummyUrl
+const effectiveKey = supabaseKey && supabaseKey !== 'your-supabase-anon-key' ? supabaseKey : dummyKey
+
 export const supabase = createClient<Database>(
-  supabaseUrl || dummyUrl,
-  supabaseKey || dummyKey,
+  effectiveUrl,
+  effectiveKey,
   {
     auth: {
       autoRefreshToken: true,
